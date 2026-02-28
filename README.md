@@ -67,6 +67,18 @@ También se mantienen por compatibilidad las opciones anteriores:
 - `--no-autostart`
 - `--disable-autostart`
 
+### Desinstalar
+
+Para eliminar el lanzador, el autoarranque y la configuración guardada:
+
+```bash
+./install_desktop_entry.sh --desinstalar
+```
+
+También disponible como `--uninstall`.
+
+Si además quieres eliminar los archivos del programa, borra la carpeta del proyecto manualmente.
+
 ## Funcionalidades
 
 ### Temporizador básico
@@ -104,6 +116,10 @@ Requiere `gir1.2-keybinder-3.0`.
 
 La app muestra un icono en la bandeja del sistema. Pulsar la **X** de la ventana la oculta a la bandeja en vez de cerrarla. Desde el menú del icono puedes mostrar/ocultar la ventana, iniciar/detener el temporizador o salir.
 
+### Acerca de
+
+La pestaña **Acerca de** muestra el logo de la aplicación, una breve descripción y un botón para abrir el repositorio en GitHub.
+
 ## Estructura del proyecto
 
 ```
@@ -134,3 +150,5 @@ La app guarda toda la configuración en:
 - Intervalo mínimo: 5 minutos
 - Intervalo máximo: 240 minutos
 - Botón **Probar aviso** para verificar notificación y pitido sin esperar al temporizador
+- Al pulsar `Ctrl+C` en la terminal la aplicación se cierra limpiamente guardando la configuración
+- El script de instalación es compatible con `sh` y `bash`
