@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eu
 
 RUTA_APP="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ARCHIVO_APP="$RUTA_APP/estira_las_piernas.py"
@@ -7,10 +7,11 @@ RUTA_LANZADORES="$HOME/.local/share/applications"
 ARCHIVO_LANZADOR="$RUTA_LANZADORES/estira-las-piernas.desktop"
 RUTA_AUTOARRANQUE="$HOME/.config/autostart"
 ARCHIVO_AUTOARRANQUE="$RUTA_AUTOARRANQUE/estira-las-piernas.desktop"
-RUTA_ICONO="/usr/share/icons/Adwaita/32x32/status/user-available.png"
+RUTA_ICONO="$RUTA_APP/img/logo.png"
 
 INSTALAR_AUTOARRANQUE=true
 DESACTIVAR_AUTOARRANQUE=false
+DESINSTALAR=false
 
 for arg in "$@"; do
 	case "$arg" in
@@ -20,13 +21,32 @@ for arg in "$@"; do
 		--desactivar-autoarranque|--disable-autostart)
 			DESACTIVAR_AUTOARRANQUE=true
 			;;
+		--desinstalar|--uninstall)
+			DESINSTALAR=true
+			;;
 		*)
 			echo "Opción no reconocida: $arg"
-			echo "Uso: $0 [--sin-autoarranque|--no-autostart] [--desactivar-autoarranque|--disable-autostart]"
+			echo "Uso: $0 [--sin-autoarranque|--no-autostart] [--desactivar-autoarranque|--disable-autostart] [--desinstalar|--uninstall]"
 			exit 1
 			;;
 	esac
 done
+
+# ── Desinstalación ─────────────────────────────────────────────
+if [ "$DESINSTALAR" = true ]; then
+	echo "Desinstalando Estira las piernas…"
+	rm -f "$ARCHIVO_LANZADOR"
+	rm -f "$ARCHIVO_AUTOARRANQUE"
+	rm -rf "$HOME/.config/estira-las-piernas"
+	update-desktop-database "$RUTA_LANZADORES" >/dev/null 2>&1 || true
+	echo "✔ Lanzador eliminado: $ARCHIVO_LANZADOR"
+	echo "✔ Autoarranque eliminado: $ARCHIVO_AUTOARRANQUE"
+	echo "✔ Configuración eliminada: $HOME/.config/estira-las-piernas"
+	echo ""
+	echo "Si deseas eliminar también los archivos del programa:"
+	echo "  rm -rf $RUTA_APP"
+	exit 0
+fi
 
 mkdir -p "$RUTA_LANZADORES"
 
@@ -68,3 +88,6 @@ fi
 
 echo "Lanzador instalado en: $ARCHIVO_LANZADOR"
 echo "Puedes abrirlo desde el menú de aplicaciones buscando: Estira las piernas"
+echo ""
+echo "Para desinstalar en el futuro:"
+echo "  sh $RUTA_APP/install_desktop_entry.sh --desinstalar"
