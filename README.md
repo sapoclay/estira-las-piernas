@@ -1,5 +1,7 @@
 # Estira las piernas (Ubuntu)
 
+<img width="560" height="590" alt="estira-las-piernas" src="https://github.com/user-attachments/assets/e38301a8-108b-4984-a02b-864679cbfd85" />
+
 Aplicación de escritorio para Ubuntu que recuerda al usuario levantarse periódicamente mediante:
 
 - Notificación de escritorio
