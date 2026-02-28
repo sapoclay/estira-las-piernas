@@ -26,6 +26,7 @@ from . import sonido
 from .bandeja import BandejaSistema
 from .estadisticas import Estadisticas
 from .estilo import configurar_estilo
+from .ventana_descanso import VentanaDescanso
 
 
 class AplicacionRecordatorioEstiramiento:
@@ -46,6 +47,9 @@ class AplicacionRecordatorioEstiramiento:
         self.modo_pomodoro = False
         self.fase_pomodoro: str = "trabajo"
         self.pomodoros_completados = 0
+
+        # Ventana de descanso activa
+        self.ventana_descanso: VentanaDescanso | None = None
 
         # Módulos auxiliares
         self.estadisticas = Estadisticas()
@@ -242,6 +246,24 @@ class AplicacionRecordatorioEstiramiento:
         )
         self.etiqueta_fase_pomodoro.grid(row=4, column=0, sticky="w", pady=(10, 0))
 
+        fila_botones_pom = ttk.Frame(padre, style="Card.TFrame")
+        fila_botones_pom.grid(row=5, column=0, sticky="ew", pady=(12, 0))
+
+        self.boton_pomodoro_iniciar = ttk.Button(
+            fila_botones_pom,
+            text="▶  Iniciar Pomodoro",
+            style="Accent.TButton",
+            command=self._iniciar_pomodoro,
+        )
+        self.boton_pomodoro_iniciar.grid(row=0, column=0, padx=(0, 10))
+
+        self.boton_pomodoro_detener = ttk.Button(
+            fila_botones_pom,
+            text="■  Detener",
+            command=self.detener,
+        )
+        self.boton_pomodoro_detener.grid(row=0, column=1)
+
     def _construir_tab_sonido(self, padre: ttk.Frame) -> None:
         ttk.Label(padre, text="Sonido de aviso:", style="Texto.TLabel").grid(
             row=0, column=0, sticky="w"
@@ -397,6 +419,9 @@ class AplicacionRecordatorioEstiramiento:
         if self.trabajo_reloj is not None:
             self.ventana_raiz.after_cancel(self.trabajo_reloj)
             self.trabajo_reloj = None
+        if self.ventana_descanso is not None:
+            self.ventana_descanso.cerrar()
+            self.ventana_descanso = None
         self.proximo_recordatorio_en = None
         self.variable_estado.set("Recordatorio detenido")
         self.variable_cuenta_regresiva.set("Temporizador inactivo")
@@ -463,6 +488,11 @@ class AplicacionRecordatorioEstiramiento:
                     "Descanso", "¡Buen trabajo! Tómate un descanso."
                 )
                 self.fase_pomodoro = "descanso"
+                self._reproducir_pitido()
+                self._actualizar_etiqueta_pomodoro()
+                self._actualizar_texto_estado()
+                self._mostrar_ventana_descanso()
+                return
             else:
                 notificaciones.notificar(
                     "A trabajar", "El descanso terminó. ¡Vamos de nuevo!"
@@ -501,6 +531,45 @@ class AplicacionRecordatorioEstiramiento:
         if self.en_ejecucion:
             self.detener()
         self._guardar_config()
+
+    def _iniciar_pomodoro(self) -> None:
+        """Activa el modo Pomodoro e inicia el temporizador."""
+        self.variable_modo_pomodoro.set(True)
+        self.iniciar()
+
+    def _mostrar_ventana_descanso(self) -> None:
+        """Abre la ventana fullscreen de descanso y pausa el temporizador."""
+        # Pausar el temporizador normal durante el descanso visual
+        if self.trabajo_recordatorio is not None:
+            self.ventana_raiz.after_cancel(self.trabajo_recordatorio)
+            self.trabajo_recordatorio = None
+        if self.trabajo_reloj is not None:
+            self.ventana_raiz.after_cancel(self.trabajo_reloj)
+            self.trabajo_reloj = None
+
+        try:
+            minutos = max(1, int(self.variable_pomodoro_descanso.get()))
+        except Exception:
+            minutos = POMODORO_DESCANSO_PREDETERMINADO
+
+        self.ventana_descanso = VentanaDescanso(
+            self.ventana_raiz, minutos, self._al_finalizar_descanso
+        )
+
+    def _al_finalizar_descanso(self) -> None:
+        """Callback cuando la ventana de descanso se cierra."""
+        self.ventana_descanso = None
+        if not self.en_ejecucion:
+            return
+        # Cambiar a fase de trabajo y continuar
+        self.fase_pomodoro = "trabajo"
+        notificaciones.notificar(
+            "A trabajar", "El descanso terminó. ¡Vamos de nuevo!"
+        )
+        self._reproducir_pitido()
+        self._actualizar_etiqueta_pomodoro()
+        self._actualizar_texto_estado()
+        self._programar_siguiente()
 
     def _actualizar_etiqueta_pomodoro(self) -> None:
         if hasattr(self, "etiqueta_fase_pomodoro"):
