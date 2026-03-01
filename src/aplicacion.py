@@ -116,7 +116,7 @@ class AplicacionRecordatorioEstiramiento:
         self.config.update(
             {
                 "interval_minutes": self.obtener_intervalo_actual(),
-                "modo_pomodoro": self.variable_modo_pomodoro.get(),
+                "modo_pomodoro": self.modo_pomodoro,
                 "pomodoro_trabajo": self.variable_pomodoro_trabajo.get(),
                 "pomodoro_descanso": self.variable_pomodoro_descanso.get(),
                 "sonido": self.variable_sonido.get(),
@@ -199,7 +199,7 @@ class AplicacionRecordatorioEstiramiento:
         fila_botones.grid(row=1, column=0, pady=(12, 0), sticky="ew")
 
         ttk.Button(
-            fila_botones, text="▶  Iniciar", style="Accent.TButton", command=self.iniciar
+            fila_botones, text="▶  Iniciar", style="Accent.TButton", command=self._iniciar_temporizador
         ).grid(row=0, column=0, padx=(0, 10))
         ttk.Button(fila_botones, text="■  Detener", command=self.detener).grid(
             row=0, column=1, padx=(0, 10)
@@ -400,7 +400,6 @@ class AplicacionRecordatorioEstiramiento:
     # ── Temporizador ───────────────────────────────────────────────
 
     def iniciar(self) -> None:
-        self.modo_pomodoro = self.variable_modo_pomodoro.get()
         if self.modo_pomodoro:
             self.fase_pomodoro = "trabajo"
             self.pomodoros_completados = 0
@@ -410,6 +409,12 @@ class AplicacionRecordatorioEstiramiento:
         self._guardar_config()
         self._actualizar_texto_estado()
         self._programar_siguiente()
+
+    def _iniciar_temporizador(self) -> None:
+        """Inicia el temporizador simple (pestaña Temporizador)."""
+        self.modo_pomodoro = False
+        self.variable_modo_pomodoro.set(False)
+        self.iniciar()
 
     def detener(self) -> None:
         self.en_ejecucion = False
@@ -534,6 +539,7 @@ class AplicacionRecordatorioEstiramiento:
 
     def _iniciar_pomodoro(self) -> None:
         """Activa el modo Pomodoro e inicia el temporizador."""
+        self.modo_pomodoro = True
         self.variable_modo_pomodoro.set(True)
         self.iniciar()
 
